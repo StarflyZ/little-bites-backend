@@ -26,18 +26,21 @@ Dibangun dengan **Node.js (Express)** dan **MariaDB**.
 ## 🛠️ Cara Menjalankan Proyek
 
 ### 1. **Clone repository**
-``sh
+```bash
 git clone https://github.com/username/nama-repo.git
 cd nama-repo
+```
 
 ---
 
 ### 2. **Install dependencies**
-``sh
+```bash
 npm install
+```
 
 ---
 
 ### 3. **Jalankan server**
-``sh
+```bash
 npm start
+```
