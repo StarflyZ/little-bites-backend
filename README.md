@@ -29,3 +29,15 @@ Dibangun dengan **Node.js (Express)** dan **MariaDB**.
 ```bash
 git clone https://github.com/username/nama-repo.git
 cd nama-repo
+
+---
+
+### 2. **Install dependencies**
+```bash
+npm install
+
+---
+
+### 3. **Jalankan server**
+```bash
+npm start
