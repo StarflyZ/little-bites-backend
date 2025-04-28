@@ -1,11 +1,11 @@
-# 🍰 Little Bites Signature Backend
+# Little Bites Signature Backend
 
 Aplikasi backend untuk manajemen penjualan, pesanan, dan stok kue di Toko Little Bites Signature.  
 Dibangun dengan **Node.js (Express)** dan **MariaDB**.
 
 ---
 
-## 🚀 Fitur
+## Fitur
 - Menyimpan & mengelola pesanan customer
 - Otomatis mengurangi stok berdasarkan pesanan
 - Laporan dan histori pemesanan
@@ -14,12 +14,11 @@ Dibangun dengan **Node.js (Express)** dan **MariaDB**.
 
 ---
 
-## 📦 Teknologi yang Digunakan
+## Teknologi yang Digunakan
 - Node.js + Express
 - MySQL/MariaDB (`mysql2`)
 - REST API
 - Postman (untuk testing)
-- Git + GitHub
 
 ---
 
