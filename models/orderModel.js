@@ -3,13 +3,43 @@ const { execute } = require('../config/db');
 const Order = {
   create: async (idcustomer, waktu_ambil, items) => {
     const created_at = new Date().toISOString().slice(0, 10);
-    
-    // 1. Tambahkan ke tabel pesanan
-    const insertOrderQuery = 'INSERT INTO pesanan (idcustomer, created_at, waktu_ambil) VALUES (?, ?, ?)';
-    const result = await execute(insertOrderQuery, [idcustomer, created_at, waktu_ambil]);
+
+    // 🔍 Ambil tipe_ambil dari customer
+    const [customer] = await execute(
+      'SELECT tipe_ambil FROM customer WHERE idcustomer = ?',
+      [idcustomer]
+    );
+    const tipe_ambil = customer?.tipe_ambil || 'langsung';
+
+    // 💰 Hitung harga_total
+    let harga_total = 0;
+    for (const item of items) {
+      const [menu] = await execute(`
+        SELECT h.harga FROM menu m
+        JOIN harga h ON m.idharga = h.idharga
+        WHERE m.idmenu = ?
+      `, [item.idmenu]);
+      const harga = menu?.harga || 0;
+      harga_total += harga * item.kuantitas;
+    }
+
+    // 📝 Tambahkan ke pesanan
+    const insertOrderQuery = `
+      INSERT INTO pesanan (idcustomer, created_at, waktu_ambil, status, harga_total, tipe_ambil)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const status = 'proses';
+    const result = await execute(insertOrderQuery, [
+      idcustomer,
+      created_at,
+      waktu_ambil,
+      status,
+      harga_total,
+      tipe_ambil
+    ]);
     const idpesanan = result.insertId;
 
-    // 2. Tambahkan ke detail_pesanan + update stok
+    // Tambahkan ke detail_pesanan dan update stok
     for (const item of items) {
       const insertDetail = `
         INSERT INTO detail_pesanan (idpesanan, idmenu, kuantitas, created_at)
@@ -30,7 +60,7 @@ const Order = {
              p.status, p.harga_total, p.tipe_ambil
       FROM pesanan p
       JOIN customer c ON p.idcustomer = c.idcustomer
-      ORDER BY p.created_at DESC
+      ORDER BY p.created_at ASC
     `;
     return await execute(query);
   }

@@ -3,10 +3,11 @@ const Order = require('../models/orderModel');
 exports.createOrder = async (req, res) => {
   try {
     const { idcustomer, waktu_ambil, items } = req.body;
-
-    if (!idcustomer || !waktu_ambil || !Array.isArray(items)) {
-      return res.status(400).json({ error: 'Data tidak lengkap' });
+    console.log('Body diterima:', req.body);
+    if (!idcustomer || !waktu_ambil || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Data pesanan tidak lengkap' });
     }
+    
 
     const result = await Order.create(idcustomer, waktu_ambil, items);
     res.status(201).json({ message: 'Pesanan berhasil dibuat', orderId: result });
