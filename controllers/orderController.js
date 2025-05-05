@@ -26,3 +26,20 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
+exports.getOrderById = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    const order = await Order.getById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Pesanan tidak ditemukan' });
+    }
+
+    const orderDetails = await Order.getOrderDetails(orderId);
+    res.json({ order, orderDetails });
+  } catch (error) {
+    console.error('Error getOrderById:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+

@@ -34,6 +34,28 @@ const Order = {
     `;
     return await execute(query);
   }
+  ,
+  getById: async (idpesanan) => {
+    const query = `
+      SELECT p.idpesanan, c.nama AS nama_customer, p.created_at, p.waktu_ambil, 
+             p.status, p.harga_total, p.tipe_ambil
+      FROM pesanan p
+      JOIN customer c ON p.idcustomer = c.idcustomer
+      WHERE p.idpesanan = ?
+    `;
+    const result = await execute(query, [idpesanan]);
+    return result[0]; // Ambil satu pesanan
+  }
+  ,
+  getOrderDetails: async (idpesanan) => {
+    const query = `
+      SELECT d.idmenu, m.nama AS menu_name, d.kuantitas, d.harga_awal
+      FROM detail_pesanan d
+      JOIN menu m ON d.idmenu = m.idmenu
+      WHERE d.idpesanan = ?
+    `;
+    return await execute(query, [idpesanan]);
+  }
 };
 
 module.exports = Order;
