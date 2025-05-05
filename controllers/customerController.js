@@ -1,4 +1,4 @@
-const Customer = require('../models/customerModel');
+const Customer = require("../models/customerModel");
 
 exports.getAllCustomers = async (req, res) => {
   try {
@@ -11,9 +11,31 @@ exports.getAllCustomers = async (req, res) => {
 
 exports.createCustomer = async (req, res) => {
   try {
-    const idcustomer = await Customer.create(req.body);
-    res.status(201).json({ idcustomer });
+    const { nama, pengirim, jenis_pesanan } = req.body;
+
+    console.log("nama:", nama);
+    console.log("pengirim:", pengirim);
+    console.log("jenis_pesanan:", jenis_pesanan);
+
+    // Validasi input
+    if (!nama?.trim() || !pengirim?.trim() || !jenis_pesanan?.trim()) {
+      return res.status(400).json({ error: "Semua field wajib diisi" });
+    }
+
+    // Debug body
+    console.log("Body yang diterima:", req.body);
+
+    // Simpan ke DB
+    const idcustomer = await Customer.create(nama, pengirim, jenis_pesanan);
+    res
+      .status(201)
+      .json({ message: "Customer berhasil ditambahkan", idcustomer });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Gagal membuat customer:", error);
+    res
+      .status(400)
+      .json({
+        error: error.message || "Terjadi kesalahan saat menambahkan customer",
+      });
   }
 };

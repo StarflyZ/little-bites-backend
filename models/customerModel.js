@@ -1,24 +1,23 @@
-const db = require('../config/db');
+const { execute } = require('../config/db');
 
-class Customer {
-  static async getAll() {
-    await db.poolConnect;
-    const request = db.pool.request();
-    const result = await request.query('SELECT * FROM customer');
-    return result.recordset;
-  }
+const Customer = {
+  create: async (nama, pengirim, jenis_pesanan) => {
+    const insertQuery = `
+      INSERT INTO customer (nama, pengirim, jenis_pesanan)
+      VALUES (?, ?, ?)
+    `;
 
-  static async create(customerData) {
-    await db.poolConnect;
-    const request = db.pool.request();
-    const result = await request
-      .input('nama', db.sql.VarChar, customerData.nama)
-      .input('pengirim', db.sql.VarChar, customerData.pengirim)
-      .input('jenis_pesanan', db.sql.VarChar, customerData.jenis_pesanan)
-      .query('INSERT INTO customer (nama, pengirim, jenis_pesanan) VALUES (@nama, @pengirim, @jenis_pesanan); SELECT SCOPE_IDENTITY() AS idcustomer');
-    
-    return result.recordset[0].idcustomer;
+    const result = await execute(insertQuery, [nama, pengirim, jenis_pesanan]);
+    return result.insertId; // return idcustomer
+  },
+
+  getAll: async () => {
+    const query = `
+      SELECT idcustomer, nama, pengirim, jenis_pesanan
+      FROM customer
+    `;
+    return await execute(query);
   }
-}
+};
 
 module.exports = Customer;
