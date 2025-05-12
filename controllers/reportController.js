@@ -30,3 +30,35 @@ exports.getPopularMenu = async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 }
+
+exports.getTotalCustomers = async (req, res) => {
+  try {
+    const result = await Report.getTotalCustomers()
+    res.json(result)
+  } catch (error) {
+    console.error("Error getTotalCustomers:", error)
+    res.status(500).json({ error: error.message })
+  }
+}
+
+exports.getTotalOrders = async (req, res) => {
+  try {
+    const result = await Report.getTotalOrders();
+    res.json(result[0]); 
+  } catch (error) {
+    console.error('Gagal mengambil total orders:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getTotalRevenue = async (req, res) => {
+  try {
+    const result = await Report.getTotalRevenue();
+    res.json(result[0]);
+  } catch (error) {
+    console.error('Gagal mengambil total penjualan:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
