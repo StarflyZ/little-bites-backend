@@ -51,3 +51,6 @@ app.use('/api/order', orderRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/uploads', express.static('uploads'));
+app.use('/api/auth', require('./routes/authRoutes'));
+

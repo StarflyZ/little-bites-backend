@@ -1,18 +1,24 @@
-const Order = require('../models/orderModel');
+const Order = require("../models/orderModel");
 
 exports.createOrder = async (req, res) => {
   try {
     const { idcustomer, waktu_ambil, items } = req.body;
-    console.log('Body diterima:', req.body);
-    if (!idcustomer || !waktu_ambil || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Data pesanan tidak lengkap' });
+    console.log("Body diterima:", req.body);
+    if (
+      !idcustomer ||
+      !waktu_ambil ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      return res.status(400).json({ error: "Data pesanan tidak lengkap" });
     }
-    
 
     const result = await Order.create(idcustomer, waktu_ambil, items);
-    res.status(201).json({ message: 'Pesanan berhasil dibuat', orderId: result });
+    res
+      .status(201)
+      .json({ message: "Pesanan berhasil dibuat", orderId: result });
   } catch (error) {
-    console.error('Error createOrder:', error);
+    console.error("Error createOrder:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -22,7 +28,7 @@ exports.getAllOrders = async (req, res) => {
     const orders = await Order.getAll();
     res.json(orders);
   } catch (error) {
-    console.error('Error getAllOrders:', error);
+    console.error("Error getAllOrders:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -33,13 +39,72 @@ exports.getOrderById = async (req, res) => {
 
     const order = await Order.getById(orderId);
     if (!order) {
-      return res.status(404).json({ error: 'Pesanan tidak ditemukan' });
+      return res.status(404).json({ error: "Pesanan tidak ditemukan" });
     }
 
     const orderDetails = await Order.getOrderDetails(orderId);
     res.json({ order, orderDetails });
   } catch (error) {
-    console.error('Error getOrderById:', error);
+    console.error("Error getOrderById:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.addPayment = async (req, res) => {
+  try {
+    const { idpesanan, jumlah_bayar, metode } = req.body;
+
+    if (!idpesanan || !jumlah_bayar || !metode) {
+      return res.status(400).json({ error: "Data pembayaran tidak lengkap" });
+    }
+
+    const result = await Order.addPayment(idpesanan, jumlah_bayar, metode);
+    res.status(201).json({
+      message: "Pembayaran berhasil diproses",
+      status_pembayaran: result.status,
+    });
+  } catch (error) {
+    console.error("Error addPayment:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getUnpaidOrders = async (req, res) => {
+  try {
+    const orders = await Order.getBelumBayar();
+    res.json(orders);
+  } catch (error) {
+    console.error("Error getUnpaidOrders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.uploadBuktiBayar = async (req, res) => {
+  try {
+    const filename = req.file.filename;
+    await Order.uploadBuktiBayar(req.body, filename);
+    res.status(200).json({ message: "Bukti pembayaran berhasil diunggah" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Gagal upload bukti pembayaran" });
+  }
+};
+
+exports.getPendingPayments = async (req, res) => {
+  try {
+    const list = await Order.getPembayaranPending();
+    res.json(list);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.markAsLunas = async (req, res) => {
+  try {
+    const { idpembayaran } = req.body;
+    await Order.setLunas(idpembayaran);
+    res.json({ message: 'Status pembayaran diperbarui menjadi Lunas' });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
