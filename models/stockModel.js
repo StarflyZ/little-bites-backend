@@ -1,62 +1,82 @@
 const { execute } = require('../config/db');
 
 const Stock = {
+  // Mendapatkan log keluar/masuk
   getStockLog: async () => {
     const query = `
-      SELECT sm.idstock_masuk, sm.jumlah_masuk, sm.tanggal_masuk, 
-             sk.idstock_keluar, sk.jumlah_keluar, sk.tanggal_keluar, sk.alasan
-      FROM stock_masuk sm
-      LEFT JOIN stock_keluar sk ON sm.idstock_masuk = sk.idstock_keluar
-      ORDER BY sm.tanggal_masuk DESC, sk.tanggal_keluar DESC;
-    `;
-    return await execute(query); 
-  }
-  ,
-  addStock: async (idmenu, jumlah, tanggal_masuk) => {
-    const queryStockMasuk = 'INSERT INTO stock_masuk (jumlah_masuk, tanggal_masuk) VALUES (?, ?)';
-    const resultStockMasuk = await execute(queryStockMasuk, [jumlah, tanggal_masuk]);
-    const idstock_masuk = resultStockMasuk.insertId;
-
-    const queryStock = 'INSERT INTO stock (idmenu, jumlah, idstock_masuk, idstock_keluar) VALUES (?, ?, ?, NULL)';
-    await execute(queryStock, [idmenu, jumlah, idstock_masuk]);
-
-    return idstock_masuk;
-  }
-  ,
-  addStockOut: async (idmenu, jumlah_keluar, tanggal_keluar, alasan) => {
-    // 1. Tambah stok keluar ke tabel stock_keluar
-    const queryStockKeluar = 'INSERT INTO stock_keluar (jumlah_keluar, tanggal_keluar, alasan) VALUES (?, ?, ?)';
-    const resultStockKeluar = await execute(queryStockKeluar, [jumlah_keluar, tanggal_keluar, alasan]);
-    const idstock_keluar = resultStockKeluar.insertId;
-
-    // 2. Kurangi stok di tabel stock
-    const queryStock = 'UPDATE stock SET jumlah = jumlah - ? WHERE idmenu = ?';
-    await execute(queryStock, [jumlah_keluar, idmenu]);
-
-    return idstock_keluar;
-  }
-  ,
-  getAllStock: async () => {
-    const query = `
-      SELECT s.idstock, m.nama AS menu_name, s.jumlah, sm.tanggal_masuk, sk.tanggal_keluar
+      SELECT 
+        m.nama AS menu_name,
+        sm.jumlah_masuk, sm.tanggal_masuk,
+        sk.jumlah_keluar, sk.tanggal_keluar, sk.alasan
       FROM stock s
       JOIN menu m ON s.idmenu = m.idmenu
-      LEFT JOIN stock_masuk sm ON s.idstock_masuk = sm.idstock_masuk
-      LEFT JOIN stock_keluar sk ON s.idstock_keluar = sk.idstock_keluar
+      LEFT JOIN stock_masuk sm ON sm.idstock = s.idstock
+      LEFT JOIN stock_keluar sk ON sk.idstock = s.idstock
+      ORDER BY sm.tanggal_masuk DESC, sk.tanggal_keluar DESC;
+    `;
+    return await execute(query);
+  },
+
+  // Menambahkan stok masuk
+  addStock: async (idmenu, jumlah, tanggal_masuk) => {
+    // 1. Cek apakah stok untuk menu ini sudah ada
+    const [stock] = await execute(`SELECT idstock FROM stock WHERE idmenu = ?`, [idmenu]);
+
+    let idstock;
+    if (stock) {
+      idstock = stock.idstock;
+      // 2. Tambah jumlah di tabel stock
+      await execute(`UPDATE stock SET jumlah = jumlah + ? WHERE idstock = ?`, [jumlah, idstock]);
+    } else {
+      // 3. Buat baris baru di tabel stock
+      const result = await execute(`INSERT INTO stock (idmenu, jumlah) VALUES (?, ?)`, [idmenu, jumlah]);
+      idstock = result.insertId;
+    }
+
+    // 4. Simpan ke stock_masuk
+    await execute(`INSERT INTO stock_masuk (jumlah_masuk, tanggal_masuk, idstock) VALUES (?, ?, ?)`, [jumlah, tanggal_masuk, idstock]);
+
+    return idstock;
+  },
+
+  // Menambahkan stok keluar
+  addStockOut: async (idmenu, jumlah_keluar, tanggal_keluar, alasan) => {
+    // 1. Ambil ID stock
+    const [stock] = await execute(`SELECT idstock FROM stock WHERE idmenu = ?`, [idmenu]);
+    if (!stock) throw new Error('Stok untuk menu ini tidak ditemukan.');
+
+    const idstock = stock.idstock;
+
+    // 2. Kurangi stok utama
+    await execute(`UPDATE stock SET jumlah = jumlah - ? WHERE idstock = ?`, [jumlah_keluar, idstock]);
+
+    // 3. Simpan ke stock_keluar
+    const result = await execute(
+      `INSERT INTO stock_keluar (jumlah_keluar, tanggal_keluar, alasan, idstock) VALUES (?, ?, ?, ?)`,
+      [jumlah_keluar, tanggal_keluar, alasan, idstock]
+    );
+
+    return result.insertId;
+  },
+
+  // Mendapatkan seluruh stok
+  getAllStock: async () => {
+    const query = `
+      SELECT s.idstock, m.nama AS menu_name, s.jumlah
+      FROM stock s
+      JOIN menu m ON s.idmenu = m.idmenu
       ORDER BY m.nama;
     `;
     return await execute(query);
-  }
-  ,
+  },
+
+  // Mendapatkan stok berdasarkan idmenu
   getStockById: async (idmenu) => {
     const query = `
-      SELECT s.idstock, m.nama AS menu_name, s.jumlah, sm.tanggal_masuk, sk.tanggal_keluar
+      SELECT s.idstock, m.nama AS menu_name, s.jumlah
       FROM stock s
       JOIN menu m ON s.idmenu = m.idmenu
-      LEFT JOIN stock_masuk sm ON s.idstock_masuk = sm.idstock_masuk
-      LEFT JOIN stock_keluar sk ON s.idstock_keluar = sk.idstock_keluar
-      WHERE s.idmenu = ?
-      ORDER BY sm.tanggal_masuk DESC, sk.tanggal_keluar DESC;
+      WHERE s.idmenu = ?;
     `;
     return await execute(query, [idmenu]);
   }
