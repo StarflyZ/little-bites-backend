@@ -164,7 +164,7 @@ const Order = {
     if (idpesanan) {
       await execute(
         `UPDATE pesanan 
-        SET status_pembayaran = 'Lunas', status = 'Selesai' 
+        SET status = 'Selesai' 
         WHERE idpesanan = ?`,
         [idpesanan]
       );

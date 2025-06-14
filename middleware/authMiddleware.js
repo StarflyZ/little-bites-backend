@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = "rahasia_anda"; // atau dari .env
+const JWT_SECRET = process.env.JWT_SECRET || "rahasia_anda"; 
 
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
@@ -7,7 +7,7 @@ function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // menyimpan iduser dan role
+    req.user = decoded;
     next();
   } catch {
     res.status(401).json({ error: "Token tidak valid" });

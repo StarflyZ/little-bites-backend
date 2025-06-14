@@ -13,7 +13,7 @@ const Customer = {
 
   getAll: async () => {
     const query = `
-      SELECT idcustomer, nama, pengirim, jenis_pesanan, tipe_ambil
+      SELECT idcustomer, nama, pengirim, jenis_pesanan
       FROM customer
     `;
     return await execute(query);
