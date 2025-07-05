@@ -2,8 +2,24 @@ const Order = require("../models/orderModel");
 
 exports.createOrder = async (req, res) => {
   try {
-    const { idcustomer, waktu_ambil, items } = req.body;
+    const {
+      idcustomer,
+      waktu_ambil,
+      tipe_ambil,
+      items,
+      nama_penerima,
+      telepon_penerima,
+      alamat_kirim,
+      tanggal_kirim,
+      jam_kirim,
+      kartu_kepada,
+      kartu_ucapan,
+      kartu_dari,
+      invoice,
+    } = req.body;
+
     console.log("Body diterima:", req.body);
+
     if (
       !idcustomer ||
       !waktu_ambil ||
@@ -13,10 +29,49 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ error: "Data pesanan tidak lengkap" });
     }
 
-    const result = await Order.create(idcustomer, waktu_ambil, items);
-    res
-      .status(201)
-      .json({ message: "Pesanan berhasil dibuat", orderId: result });
+    if (
+      !idcustomer ||
+      !tipe_ambil ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      return res.status(400).json({ error: "Data pesanan tidak lengkap" });
+    }
+
+    // Logika gabungan waktu ambil jika kirim
+    if (tipe_ambil === "kirim") {
+      if (!tanggal_kirim || !jam_kirim) {
+        return res
+          .status(400)
+          .json({
+            error: "Tanggal dan jam kirim wajib diisi untuk tipe 'kirim'",
+          });
+      }
+
+      // Gabungkan jadi satu datetime string: "2025-07-10T14:30"
+      waktu_ambil = `${tanggal_kirim}T${jam_kirim}`;
+    }
+
+    const result = await Order.create(
+      idcustomer,
+      waktu_ambil,
+      items,
+      tipe_ambil,
+      nama_penerima,
+      telepon_penerima,
+      alamat_kirim,
+      tanggal_kirim,
+      jam_kirim,
+      kartu_kepada,
+      kartu_ucapan,
+      kartu_dari,
+      invoice
+    );
+
+    res.status(201).json({
+      message: "Pesanan berhasil dibuat",
+      orderId: result,
+    });
   } catch (error) {
     console.error("Error createOrder:", error);
     res.status(500).json({ error: error.message });
@@ -103,9 +158,8 @@ exports.markAsLunas = async (req, res) => {
   try {
     const { idpembayaran } = req.body;
     await Order.setLunas(idpembayaran);
-    res.json({ message: 'Status pembayaran diperbarui menjadi Lunas' });
+    res.json({ message: "Status pembayaran diperbarui menjadi Lunas" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-

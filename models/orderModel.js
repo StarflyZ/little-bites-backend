@@ -1,18 +1,31 @@
 const { execute } = require("../config/db");
 
 const Order = {
-  create: async (idcustomer, waktu_ambil, items) => {
+  create: async (
+    idcustomer,
+    waktu_ambil,
+    items,
+    tipe_ambil = "langsung",
+    nama_penerima = null,
+    telepon_penerima = null,
+    alamat_kirim = null,
+    tanggal_kirim = null,
+    jam_kirim = null,
+    kartu_kepada = null,
+    kartu_ucapan = null,
+    kartu_dari = null,
+    invoice = "Tidak"
+  ) => {
     const created_at = new Date().toISOString().slice(0, 10);
 
-    const tipe_ambil = "langsung";
-
+    // Hitung total harga
     let harga_total = 0;
     for (const item of items) {
       const [menu] = await execute(
         `
-        SELECT h.harga FROM menu m
-        JOIN harga h ON m.idharga = h.idharga
-        WHERE m.idmenu = ?
+      SELECT h.harga FROM menu m
+      JOIN harga h ON m.idharga = h.idharga
+      WHERE m.idmenu = ?
       `,
         [item.idmenu]
       );
@@ -20,13 +33,20 @@ const Order = {
       harga_total += harga * item.kuantitas;
     }
 
-    const insertOrderQuery = `
-      INSERT INTO pesanan (idcustomer, created_at, waktu_ambil, status, harga_total, tipe_ambil)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
     const status = "proses";
 
+    // ✅ Tambahkan semua kolom ke query
+    const insertOrderQuery = `
+    INSERT INTO pesanan (
+      idcustomer, created_at, waktu_ambil, status, harga_total, tipe_ambil,
+      nama_penerima, telepon_penerima, alamat_kirim,
+      tanggal_kirim, jam_kirim,
+      kartu_kepada, kartu_ucapan, kartu_dari, invoice
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+    // ✅ Eksekusi query dengan semua field
     const result = await execute(insertOrderQuery, [
       idcustomer,
       created_at,
@@ -34,14 +54,25 @@ const Order = {
       status,
       harga_total,
       tipe_ambil,
+      nama_penerima,
+      telepon_penerima,
+      alamat_kirim,
+      tanggal_kirim,
+      jam_kirim,
+      kartu_kepada,
+      kartu_ucapan,
+      kartu_dari,
+      invoice,
     ]);
+
     const idpesanan = result.insertId;
 
+    // Insert detail pesanan
     for (const item of items) {
       const insertDetail = `
-        INSERT INTO detail_pesanan (idpesanan, idmenu, kuantitas, created_at)
-        VALUES (?, ?, ?, ?)
-      `;
+      INSERT INTO detail_pesanan (idpesanan, idmenu, kuantitas, created_at)
+      VALUES (?, ?, ?, ?)
+    `;
       await execute(insertDetail, [
         idpesanan,
         item.idmenu,
@@ -49,13 +80,13 @@ const Order = {
         created_at,
       ]);
 
-      const updateStok =
-        "UPDATE stock SET jumlah = jumlah - ? WHERE idmenu = ?";
+      const updateStok = `UPDATE stock SET jumlah = jumlah - ? WHERE idmenu = ?`;
       await execute(updateStok, [item.kuantitas, item.idmenu]);
     }
 
     return idpesanan;
   },
+
   getAll: async () => {
     const query = `
       SELECT p.idpesanan, c.nama AS nama_customer, p.created_at, p.waktu_ambil,
