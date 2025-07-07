@@ -4,6 +4,7 @@ const reportController = require("../controllers/reportController");
 const { authMiddleware, adminOnly } = require("../middleware/authMiddleware");
 
 router.get("/monthly", authMiddleware, adminOnly, reportController.getMonthlyReport);
+router.get("/weekly", authMiddleware, adminOnly, reportController.getWeeklySales);
 router.get("/tagihan/:idcustomer", authMiddleware, adminOnly, reportController.getCustomerBill);
 router.get("/popular", authMiddleware, adminOnly, reportController.getPopularMenu);
 router.get("/total-customers", authMiddleware, adminOnly, reportController.getTotalCustomers);

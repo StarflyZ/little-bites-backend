@@ -1,13 +1,17 @@
 const { execute } = require('../config/db');
 
 const Customer = {
-  create: async (nama, pengirim, jenis_pesanan, tipe_ambil) => {
+  create: async (nama, pengirim, jenis_pesanan) => {
     const insertQuery = `
       INSERT INTO customer (nama, pengirim, jenis_pesanan)
       VALUES (?, ?, ?)
     `;
 
-    const result = await execute(insertQuery, [nama, pengirim, jenis_pesanan, tipe_ambil]);
+    if (nama === undefined || pengirim === undefined || jenis_pesanan === undefined) {
+      throw new Error("Parameter tidak lengkap (ada yang undefined)");
+    }
+
+    const result = await execute(insertQuery, [nama, pengirim, jenis_pesanan]);
     return result.insertId; 
   },
 

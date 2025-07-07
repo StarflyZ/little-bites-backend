@@ -46,7 +46,6 @@ const Order = {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-    // ✅ Eksekusi query dengan semua field
     const result = await execute(insertOrderQuery, [
       idcustomer,
       created_at,
@@ -93,7 +92,7 @@ const Order = {
              p.status, p.harga_total, p.tipe_ambil
       FROM pesanan p
       JOIN customer c ON p.idcustomer = c.idcustomer
-      ORDER BY p.created_at ASC
+      ORDER BY p.waktu_ambil ASC
     `;
     return await execute(query);
   },
@@ -148,7 +147,7 @@ const Order = {
            p.status, p.harga_total, p.tipe_ambil
     FROM pesanan p
     JOIN customer c ON p.idcustomer = c.idcustomer
-    WHERE p.status_pembayaran = 'Belum Bayar'
+    WHERE p.status = 'Belum Bayar'
     ORDER BY p.created_at ASC
   `;
     return await execute(query);

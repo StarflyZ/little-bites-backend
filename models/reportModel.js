@@ -1,6 +1,24 @@
 const { execute } = require("../config/db");
 
 const Report = {
+  getWeeklySales: async () => {
+    const query = `
+    SELECT 
+      YEAR(p.created_at) AS year,
+      WEEK(p.created_at, 1) AS week_number,  -- mode 1: minggu mulai Senin
+      m.nama AS menu_name,
+      SUM(d.kuantitas) AS total_quantity,
+      SUM(p.harga_total) AS total_sales
+    FROM pesanan p
+    JOIN detail_pesanan d ON p.idpesanan = d.idpesanan
+    JOIN menu m ON d.idmenu = m.idmenu
+    WHERE YEAR(p.created_at) = YEAR(CURDATE())
+      AND WEEK(p.created_at, 1) = WEEK(CURDATE(), 1)
+    GROUP BY m.idmenu, year, week_number
+    ORDER BY total_sales DESC;
+  `;
+    return await execute(query);
+  },
   getMonthlySales: async () => {
     const query = `
       SELECT 

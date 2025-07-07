@@ -2,7 +2,7 @@ const Order = require("../models/orderModel");
 
 exports.createOrder = async (req, res) => {
   try {
-    const {
+    let {
       idcustomer,
       waktu_ambil,
       tipe_ambil,
@@ -20,15 +20,7 @@ exports.createOrder = async (req, res) => {
 
     console.log("Body diterima:", req.body);
 
-    if (
-      !idcustomer ||
-      !waktu_ambil ||
-      !Array.isArray(items) ||
-      items.length === 0
-    ) {
-      return res.status(400).json({ error: "Data pesanan tidak lengkap" });
-    }
-
+    // Validasi awal
     if (
       !idcustomer ||
       !tipe_ambil ||
@@ -38,18 +30,20 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ error: "Data pesanan tidak lengkap" });
     }
 
-    // Logika gabungan waktu ambil jika kirim
+    // Tipe kirim harus punya tanggal & jam kirim
     if (tipe_ambil === "kirim") {
       if (!tanggal_kirim || !jam_kirim) {
-        return res
-          .status(400)
-          .json({
-            error: "Tanggal dan jam kirim wajib diisi untuk tipe 'kirim'",
-          });
+        return res.status(400).json({
+          error: "Tanggal dan jam kirim wajib diisi untuk tipe 'kirim'",
+        });
       }
-
-      // Gabungkan jadi satu datetime string: "2025-07-10T14:30"
+      // Gabungkan tanggal & jam kirim menjadi waktu_ambil
       waktu_ambil = `${tanggal_kirim}T${jam_kirim}`;
+    }
+
+    // Jika ambil langsung, pastikan waktu_ambil tersedia
+    if (tipe_ambil === "langsung" && !waktu_ambil) {
+      return res.status(400).json({ error: "Waktu ambil wajib diisi" });
     }
 
     const result = await Order.create(

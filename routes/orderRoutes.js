@@ -4,10 +4,10 @@ const upload = require("../middleware/upload");
 const orderController = require("../controllers/orderController");
 const { authMiddleware, adminOnly } = require("../middleware/authMiddleware");
 
-router.get("/", authMiddleware, adminOnly, orderController.getAllOrders); // admin
-router.get("/belum-bayar", authMiddleware, adminOnly, orderController.getUnpaidOrders);
-router.get("/pembayaran/menunggu", authMiddleware, adminOnly, orderController.getPendingPayments); // admin
-router.post("/pembayaran/set-lunas", authMiddleware, adminOnly, orderController.markAsLunas); // admin
+router.get("/", orderController.getAllOrders); // admin
+router.get("/belum-bayar", orderController.getUnpaidOrders);
+router.get("/pembayaran/menunggu",  orderController.getPendingPayments); // admin
+router.post("/pembayaran/set-lunas", orderController.markAsLunas); // admin
 
 router.post("/create", orderController.createOrder);
 router.post("/payment", orderController.addPayment);
